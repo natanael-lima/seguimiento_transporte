@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         // ⚠️ PEGA AQUÍ TU URL DE APPS SCRIPT
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxTMMazj5M6SbJpfKBfzQtq-CITd53N_1jG7DMcqKS1QRysBWz1U8UKrTmwMkOrd0El/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2Mze4ySYves0uLpjlQmIMBuFKyNwzj8Hg0OEpMuWeKJ7glMe35v0B98Bmdsg_4YAk/exec";
     </script>
 </head>
 <body class="bg-gray-100 text-gray-900 font-sans p-2 sm:p-4 pb-12 mx-auto">
@@ -54,7 +54,7 @@
     <header class="bg-slate-900 text-white p-3 sm:p-4 rounded-xl mb-3 shadow-sm flex items-center justify-between">
         <div>
             <h1 class="text-base sm:text-lg font-bold flex items-center gap-2">
-                <i class="fa-solid fa-truck-fast text-blue-400"></i> Control Reparto Móvil <span id="badgeRol" class="text-[10px] bg-blue-600 px-2 py-0.5 rounded uppercase"></span>
+                </i>Reparto Móvil<span id="badgeRol" class="text-[4px] bg-blue-600 px-2 py-0.5 rounded uppercase"></span>
             </h1>
             <small class="text-slate-400 text-xs">Distribuidora El Indio SRL</small>
         </div>
@@ -66,10 +66,10 @@
     <!-- 🎛️ MENÚ DE OPCIONES DEL ADMINISTRADOR -->
     <div id="adminMenu" class="bg-white p-3 rounded-xl border border-gray-200 mb-3 shadow-xs flex flex-wrap gap-2 hidden items-center">
         <button onclick="switchAdminTab('create')" id="btnTabCreate" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition">
-            <i class="fa-solid fa-file-circle-plus"></i> ➕ Cargar Nueva HDR
+            <i class="fa-solid fa-file-circle-plus"></i> Cargar Nueva HDR
         </button>
         <button onclick="switchAdminTab('monitor')" id="btnTabMonitor" class="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition">
-            <i class="fa-solid fa-binoculars"></i> 👁️ Monitorear Repartos Activos
+            <i class="fa-solid fa-binoculars"></i> Monitorear Repartos Activos
         </button>
         
         <!-- Selector desplegable para Monitoreo en Vivo -->
@@ -93,11 +93,28 @@
         </div>
         <div class="flex flex-col gap-1">
             <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Zona</label>
-            <input type="text" id="hdrZona" placeholder="Zona Asignada" class="p-1.5 border border-gray-300 rounded-lg text-xs sm:text-sm font-semibold w-full bg-gray-50">
+            <select id="hdrZona" class="p-1.5 border border-gray-300 rounded-lg text-xs font-semibold w-full bg-gray-50 text-gray-700 outline-none focus:ring-1 focus:ring-blue-500">
+                <option value="" disabled selected>Seleccionar Zona...</option>
+                <option value="TARTAGAL NORTE">TARTAGAL NORTE</option>
+                <option value="TARTAGAL SUR">TARTAGAL SUR</option>
+                <option value="AGUARAY">AGUARAY</option>
+                <option value="POCITO A">POCITO A</option>
+                <option value="POCITO B">POCITO B</option>
+                <option value="MOSCONI">MOSCONI</option>
+                <option value="CORNEJO">CORNEJO</option>
+            </select>
         </div>
+        
         <div class="flex flex-col gap-1">
-            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Fecha</label>
-            <input type="date" id="hdrFecha" class="p-1.5 border border-gray-300 rounded-lg text-xs sm:text-sm font-semibold w-full bg-gray-50">
+            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Patente</label>
+            <select id="hdrPatente" class="p-1.5 border border-gray-300 rounded-lg text-xs font-semibold w-full bg-gray-50 text-gray-700 outline-none focus:ring-1 focus:ring-blue-500">
+                <option value="" disabled selected>Seleccionar Patente...</option>
+                <option value="AC 911 IM">AC 911 IM</option>
+                <option value="AC 911 II">AC 911 II</option>
+                <option value="MPS 239">MPS 239</option>
+                <option value="AI 581 LJ">AI 581 LJ</option>
+                <option value="AF 550 SJ">AF 550 SJ</option>
+            </select>
         </div>
         <div class="flex flex-col gap-1">
             <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Clientes</label>
@@ -339,35 +356,51 @@
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
-
+        
             const reader = new FileReader();
             reader.onload = function(evt) {
                 const data = new Uint8Array(evt.target.result);
                 const wb = XLSX.read(data, { type: 'array' });
                 const ws = wb.Sheets[wb.SheetNames[0]];
                 const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
-
-                const hdrInput = document.getElementById('hdrNumero').value || 'S/N';
-                const choferInput = document.getElementById('hdrChofer').value || 'S/D';
-                const zonaInput = document.getElementById('hdrZona').value || 'S/D';
-
-                repartoData = json.map(r => ({
-                    HDR: hdrInput,
-                    CHOFER: choferInput,
-                    ZONA: zonaInput,
-                    CLIENTE: r.CLIENTE || r.COD || r.RS || '',
-                    RAZON_SOCIAL: r['RAZON SOCIAL'] || r.NOMBRE || r.RS || '',
-                    DIRECCION: r.DIRECCION || '',
-                    COMPROBANTE: r.COMPROBANTE || '',
-                    IMPORTE:r.IMPORTE || r.IMPORTA|| r.MONTO,
-                    CUENTA_CORRIENTE: String(r['CUENTA CORRIENTE'] || '').toUpperCase() === 'SI',
-                    ESTADO: r['ESTADO ENTREGA'] || 'PENDIENTE',
-                    FORMA_PAGO: r['FORMA DE PAGO'] || 'EFECTIVO',
-                    OBSERVACIONES: r.OBSERVACIONES || ''
-                }));
-
+        
+                const hdrInput = document.getElementById('hdrNumero').value.trim() || 'S/N';
+                const choferInput = document.getElementById('hdrChofer').value.trim() || 'S/D';
+                const zonaInput = document.getElementById('hdrZona').value.trim() || 'S/D';
+                const patenteInput = document.getElementById('hdrPatente').value.trim() || 'S/D';
+        
+                repartoData = json.map(r => {
+                    // 1. Extraer y formatear el código de cliente a 10 dígitos exactos con ceros a la izquierda
+                    let rawCliente = String(r.CLIENTE || r.COD || r.ID || '').trim();
+                    // Eliminar espacios y formatear a 10 dígitos (Ej: "311587" -> "0000311587")
+                    let clienteFormatted = rawCliente ? rawCliente.padStart(10, '0') : '0000000000';
+        
+                    // 2. Evaluar Condición de Venta para C/C
+                    let condVenta = String(r.COND || r['CONDICION'] || '').toLowerCase();
+                    let esCC = condVenta.includes('cta') || condVenta.includes('corriente') || condVenta.includes('cc');
+        
+                    // 3. Formatear importe numérico correctamente desde string/número
+                    let imp = cleanNumber(r.IMPORTE || r.IMPORTA || r.MONTO || 0);
+        
+                    return {
+                        HDR: hdrInput,
+                        CHOFER: choferInput,
+                        ZONA: zonaInput,
+                        PATENTE: patenteInput,
+                        CLIENTE: clienteFormatted,
+                        RAZON_SOCIAL: String(r.RS || r['RAZON SOCIAL'] || r.NOMBRE || '').trim(),
+                        DIRECCION: String(r.DIRECCION || '').trim(),
+                        COMPROBANTE: String(r.COMPROBANTE || '').trim(),
+                        IMPORTE: imp,
+                        CUENTA_CORRIENTE: esCC,
+                        ESTADO: 'PENDIENTE',
+                        FORMA_PAGO: esCC ? 'CUENTA CORRIENTE' : 'EFECTIVO',
+                        OBSERVACIONES: ''
+                    };
+                });
+        
                 renderAll();
-                alert("Excel cargado localmente. Verifique los datos y presione 'Registrar HDR en Nube'.");
+                alert("Excel cargado correctamente con clientes a 10 dígitos. Presione 'Registrar HDR en Nube'.");
             };
             reader.readAsArrayBuffer(file);
         });
