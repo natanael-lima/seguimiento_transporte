@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Control Reparto - El Indio SRL</title>
+    <!-- Librerías JS para procesamiento de Excel y CSV -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --success: #16a34a;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --info: #0284c7;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --border: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: #1e293b;
+            margin: 0;
+            padding: 8px;
+            padding-bottom: 24px;
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .header h1 { margin: 0; font-size: 1.1rem; }
+        .header small { color: #94a3b8; font-size: 0.75rem; }
+
+        /* Panel de datos generales desplegable en móvil */
+        .hdr-info-panel {
+            background: var(--card);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+        }
+
+        .hdr-field {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .hdr-field label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .hdr-field input {
+            padding: 6px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .hdr-badge-count {
+            background: #f8fafc;
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--primary);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        /* Tarjetas de Resumen Dinámico */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .metric-card {
+            background: var(--card);
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .metric-title { font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
+        .metric-value { font-size: 1rem; font-weight: 700; margin-top: 2px; }
+        .metric-value.total { color: var(--accent); }
+        .metric-value.cobrado { color: var(--success); }
+        .metric-value.transf { color: var(--info); }
+        .metric-value.rechazado { color: var(--danger); }
+
+        /* Botones táctiles optimizados */
+        .controls {
+            background: var(--card);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        button, .file-label {
+            flex: 1;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button.export { background: var(--success); }
+        button.demo { background: #475569; flex: 0.6; }
+        input[type="file"] { display: none; }
+
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.88rem;
+        }
+
+        /* VISTA TIPO TARJETA PARA MÓVILES (MOBILE FIRST) */
+        .cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .client-card {
+            background: var(--card);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--warning); /* Por defecto pendiente */
+            transition: border-color 0.2s;
+        }
+
+        .client-card.status-border-ENTREGADO { border-left-color: var(--success); }
+        .client-card.status-border-PENDIENTE_TRANSF { border-left-color: var(--info); }
+        .client-card.status-border-RECHAZADO { border-left-color: var(--danger); }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+
+        .client-id {
+            font-size: 0.75rem;
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .client-amount {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .client-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 2px;
+        }
+
+        .client-address {
+            font-size: 0.8rem;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+        .client-info-pills {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .pill {
+            font-size: 0.72rem;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+        }
+
+        .cc-label-pill {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #1e293b;
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Formulario integrado en la tarjeta para rapidez */
+        .card-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .select-mobile {
+            width: 100%;
+            padding: 8px 6px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 0.78rem;
+            font-weight: 700;
+            background: #ffffff;
+        }
+
+        .status-ENTREGADO { background-color: #dcfce7; color: #15803d; }
+        .status-PENDIENTE_TRANSF { background-color: #e0f2fe; color: #0369a1; }
+        .status-PENDIENTE { background-color: #fef3c7; color: #b45309; }
+        .status-RECHAZADO { background-color: #fee2e2; color: #b91c1c; }
+
+        .obs-input-mobile {
+            grid-column: span 2;
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.82rem;
+            margin-top: 4px;
+        }
+
+        /* VISTA DE TABLA TRADICIONAL PARA PANTALLAS ANCHAS */
+        .desktop-table-container {
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            body { padding: 16px; }
+            .metrics-grid { grid-template-columns: repeat(4, 1fr); }
+            .controls { flex-direction: row; }
+            .btn-group { flex: 1; }
+            .search-box { flex: 1; }
+            
+            /* Ocultar tarjetas en PC y mostrar Tabla */
+            .cards-container { display: none; }
+            .desktop-table-container {
+                display: block;
+                overflow-x: auto;
+                background: var(--card);
+                border-radius: 8px;
+                border: 1px solid var(--border);
+                max-height: 60vh;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.82rem;
+                text-align: left;
+            }
+
+            th, td { padding: 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+            th { background: #f1f5f9; position: sticky; top: 0; z-index: 10; font-weight: 700; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🚚 Control Reparto Móvil</h1>
+        <small>Distribuidora El Indio SRL</small>
+    </div>
+
+    <!-- PANEL HDR EDITABLE -->
+    <div class="hdr-info-panel">
+        <div class="hdr-field">
+            <label>N° Hoja Ruta</label>
+            <input type="text" id="hdrNumero" placeholder="HDR-063">
+        </div>
+        <div class="hdr-field">
+            <label>Chofer</label>
+            <input type="text" id="hdrChofer" placeholder="Chofer">
+        </div>
+        <div class="hdr-field">
+            <label>Zona</label>
+            <input type="text" id="hdrZona" placeholder="Zona">
+        </div>
+        <div class="hdr-field">
+            <label>Fecha</label>
+            <input type="date" id="hdrFecha">
+        </div>
+        <div class="hdr-field">
+            <label>Clientes</label>
+            <div id="cantClientes" class="hdr-badge-count">0 Únicos</div>
+        </div>
+        <div class="hdr-field">
+            <label>Comprobantes</label>
+            <div id="cantFacturas" class="hdr-badge-count">0 Facturas</div>
+        </div>
+    </div>
+
+    <!-- TARJETAS DE MÉTRICAS -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-title">Carga Total</div>
+            <div id="totalCarga" class="metric-value total">$ 0,00</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Cobrado</div>
+            <div id="totalCobrado" class="metric-value cobrado">$ 0,00</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Transf. Pend.</div>
+            <div id="totalPendTransf" class="metric-value transf">$ 0,00</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Rechazado</div>
+            <div id="totalRechazado" class="metric-value rechazado">$ 0,00</div>
+        </div>
+    </div>
+
+    <!-- CONTROLES MÓVILES -->
+    <div class="controls">
+        <div class="btn-group">
+            <label class="file-label">
+                📁 Cargar
+                <input type="file" id="fileInput" accept=".csv, .xlsx, .xls">
+            </label>
+            <button class="export" onclick="exportExcel()">📊 Exportar</button>
+            <button class="demo" onclick="loadDemoData()">📋 Demo</button>
+        </div>
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar cliente, calle, factura..." onkeyup="filterData()">
+    </div>
+
+    <!-- VISTA MÓVIL (TARJETAS) -->
+    <div id="cardsContainer" class="cards-container">
+        <!-- Renderizado dinámico en celulares -->
+    </div>
+
+    <!-- VISTA ESCRITORIO (TABLA) -->
+    <div class="desktop-table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Razón Social</th>
+                    <th>Dirección</th>
+                    <th>Comprobante</th>
+                    <th>Importe ($)</th>
+                    <th>C/C</th>
+                    <th>Estado Entrega</th>
+                    <th>Forma de Pago</th>
+                    <th>Observación / Novedad</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Renderizado dinámico en PC -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let repartoData = [];
+
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById('hdrFecha').value = new Date().toISOString().slice(0, 10);
+        });
+
+        function cleanNumber(val) {
+            if (typeof val === 'number') return val;
+            if (!val) return 0;
+            let str = String(val).replace(/\$/g, '').trim();
+            if (str.includes('.') && str.includes(',')) str = str.replace(/\./g, '').replace(',', '.');
+            else if (str.includes(',')) str = str.replace(',', '.');
+            return parseFloat(str) || 0;
+        }
+
+        function formatMoney(num) {
+            return '$ ' + num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function mapRow(row) {
+            const keys = Object.keys(row);
+            const getV = (names) => {
+                for (let n of names) {
+                    const match = keys.find(k => k.trim().toLowerCase() === n.toLowerCase() || k.trim().toLowerCase().includes(n.toLowerCase()));
+                    if (match && row[match] !== undefined) return String(row[match]).trim();
+                }
+                return '';
+            };
+
+            const condVenta = getV(['cond', 'condicion', 'condicion de venta']);
+            const esCC = condVenta.toLowerCase().includes('cta') || condVenta.toLowerCase().includes('corriente') || condVenta.toLowerCase().includes('cc');
+
+            return {
+                codigo: getV(['cliente', 'codigo', 'cod']),
+                nombre: getV(['rs', 'razon social', 'nombre']),
+                direccion: getV(['direccion', 'dir']),
+                comprobante: getV(['comprobante', 'comp', 'factura']),
+                importe: cleanNumber(getV(['importa', 'importe', 'monto', 'total'])),
+                cuentaCorriente: esCC,
+                estado: getV(['estado']) || 'PENDIENTE',
+                formaPago: getV(['forma de pago', 'pago']) || (esCC ? 'CUENTA CORRIENTE' : 'EFECTIVO'),
+                observacion: getV(['motivo', 'observacion', 'notas'])
+            };
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const name = file.name.toLowerCase();
+            if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const data = new Uint8Array(evt.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                    repartoData = json.map(mapRow);
+                    renderAll();
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(res) {
+                        repartoData = res.data.map(mapRow);
+                        renderAll();
+                    }
+                });
+            }
+        });
+
+        function renderAll(filteredData = null) {
+            const list = filteredData || repartoData;
+            renderMobileCards(list);
+            renderDesktopTable(list);
+            calculateTotals();
+        }
+
+        // RENDERIZADO EN MÓVIL (TARJETAS)
+        function renderMobileCards(list) {
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = '';
+
+            if (list.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; background:#fff; border-radius:8px;">No hay registros cargados.</div>';
+                return;
+            }
+
+            list.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = `client-card status-border-${item.estado}`;
+
+                card.innerHTML = `
+                    <div class="card-header-row">
+                        <span class="client-id">ID: ${item.codigo}</span>
+                        <span class="client-amount">${formatMoney(item.importe)}</span>
+                    </div>
+                    <div class="client-name">${item.nombre}</div>
+                    <div class="client-address">📍 ${item.direccion}</div>
+                    
+                    <div class="client-info-pills">
+                        <span class="pill">📄 ${item.comprobante}</span>
+                        <label class="cc-label-pill">
+                            <input type="checkbox" ${item.cuentaCorriente ? 'checked' : ''} onchange="updateCC(${index}, this.checked)">
+                            C/C
+                        </label>
+                    </div>
+
+                    <div class="card-actions">
+                        <select class="select-mobile status-${item.estado}" onchange="updateStatus(${index}, this.value)">
+                            <option value="PENDIENTE" ${item.estado === 'PENDIENTE' ? 'selected' : ''}>🟡 PENDIENTE</option>
+                            <option value="ENTREGADO" ${item.estado === 'ENTREGADO' ? 'selected' : ''}>🟢 COBRADO</option>
+                            <option value="PENDIENTE_TRANSF" ${item.estado === 'PENDIENTE_TRANSF' ? 'selected' : ''}>🔵 TRANSF. PEND.</option>
+                            <option value="RECHAZADO" ${item.estado === 'RECHAZADO' ? 'selected' : ''}>🔴 RECHAZADO</option>
+                        </select>
+
+                        <select class="select-mobile" onchange="updatePayment(${index}, this.value)">
+                            <option value="EFECTIVO" ${item.formaPago === 'EFECTIVO' ? 'selected' : ''}>💵 EFECTIVO</option>
+                            <option value="TRANSFERENCIA" ${item.formaPago === 'TRANSFERENCIA' ? 'selected' : ''}>📲 TRANSF.</option>
+                            <option value="CHEQUE" ${item.formaPago === 'CHEQUE' ? 'selected' : ''}>📜 CHEQUE</option>
+                            <option value="ECHEQ" ${item.formaPago === 'ECHEQ' ? 'selected' : ''}>💻 ECHEQ</option>
+                            <option value="CUENTA CORRIENTE" ${item.formaPago === 'CUENTA CORRIENTE' ? 'selected' : ''}>📋 CTA CTE</option>
+                        </select>
+
+                        <input type="text" class="obs-input-mobile" value="${item.observacion || ''}" 
+                               onchange="updateObs(${index}, this.value)" placeholder="✍️ Añadir nota/novedad...">
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // RENDERIZADO EN PC (TABLA)
+        function renderDesktopTable(list) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            list.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${item.codigo}</b></td>
+                    <td>${item.nombre}</td>
+                    <td>${item.direccion}</td>
+                    <td>${item.comprobante}</td>
+                    <td><b>${formatMoney(item.importe)}</b></td>
+                    <td style="text-align:center;">
+                        <input type="checkbox" ${item.cuentaCorriente ? 'checked' : ''} onchange="updateCC(${index}, this.checked)">
+                    </td>
+                    <td>
+                        <select class="select-mobile status-${item.estado}" onchange="updateStatus(${index}, this.value)">
+                            <option value="PENDIENTE" ${item.estado === 'PENDIENTE' ? 'selected' : ''}>🟡 PENDIENTE</option>
+                            <option value="ENTREGADO" ${item.estado === 'ENTREGADO' ? 'selected' : ''}>🟢 COBRADO</option>
+                            <option value="PENDIENTE_TRANSF" ${item.estado === 'PENDIENTE_TRANSF' ? 'selected' : ''}>🔵 TRANSF. PEND.</option>
+                            <option value="RECHAZADO" ${item.estado === 'RECHAZADO' ? 'selected' : ''}>🔴 RECHAZADO</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="select-mobile" onchange="updatePayment(${index}, this.value)">
+                            <option value="EFECTIVO" ${item.formaPago === 'EFECTIVO' ? 'selected' : ''}>EFECTIVO</option>
+                            <option value="TRANSFERENCIA" ${item.formaPago === 'TRANSFERENCIA' ? 'selected' : ''}>TRANSFERENCIA</option>
+                            <option value="CHEQUE" ${item.formaPago === 'CHEQUE' ? 'selected' : ''}>CHEQUE</option>
+                            <option value="ECHEQ" ${item.formaPago === 'ECHEQ' ? 'selected' : ''}>ECHEQ</option>
+                            <option value="CUENTA CORRIENTE" ${item.formaPago === 'CUENTA CORRIENTE' ? 'selected' : ''}>CUENTA CORRIENTE</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" class="obs-input-mobile" value="${item.observacion || ''}" 
+                               onchange="updateObs(${index}, this.value)" placeholder="Añadir nota...">
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateStatus(idx, val) {
+            repartoData[idx].estado = val;
+            if (val === 'PENDIENTE_TRANSF') repartoData[idx].formaPago = 'TRANSFERENCIA';
+            renderAll();
+        }
+
+        function updatePayment(idx, val) {
+            repartoData[idx].formaPago = val;
+        }
+
+        function updateCC(idx, isChecked) {
+            repartoData[idx].cuentaCorriente = isChecked;
+            if (isChecked && repartoData[idx].formaPago === 'EFECTIVO') {
+                repartoData[idx].formaPago = 'CUENTA CORRIENTE';
+            }
+            renderAll();
+        }
+
+        function updateObs(idx, val) {
+            repartoData[idx].observacion = val;
+        }
+
+        function calculateTotals() {
+            let total = 0, cobrado = 0, pendTransf = 0, rechazado = 0;
+            const clientesUnicos = new Set();
+
+            repartoData.forEach(item => {
+                total += item.importe;
+                if (item.codigo) clientesUnicos.add(item.codigo);
+
+                if (item.estado === 'ENTREGADO') cobrado += item.importe;
+                else if (item.estado === 'PENDIENTE_TRANSF') pendTransf += item.importe;
+                else if (item.estado === 'RECHAZADO') rechazado += item.importe;
+            });
+
+            document.getElementById('totalCarga').textContent = formatMoney(total);
+            document.getElementById('totalCobrado').textContent = formatMoney(cobrado);
+            document.getElementById('totalPendTransf').textContent = formatMoney(pendTransf);
+            document.getElementById('totalRechazado').textContent = formatMoney(rechazado);
+
+            document.getElementById('cantClientes').textContent = `${clientesUnicos.size} Únicos`;
+            document.getElementById('cantFacturas').textContent = `${repartoData.length} Facturas`;
+        }
+
+        function filterData() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = repartoData.filter(i => 
+                i.codigo.toLowerCase().includes(q) ||
+                i.nombre.toLowerCase().includes(q) ||
+                i.direccion.toLowerCase().includes(q) ||
+                i.comprobante.toLowerCase().includes(q)
+            );
+            renderAll(filtered);
+        }
+
+        function exportExcel() {
+            if (repartoData.length === 0) return alert("No hay datos para exportar.");
+
+            const hdrNum = document.getElementById('hdrNumero').value || 'S/N';
+            const chofer = document.getElementById('hdrChofer').value || 'S/D';
+            const zona = document.getElementById('hdrZona').value || 'S/D';
+            const fecha = document.getElementById('hdrFecha').value || new Date().toISOString().slice(0, 10);
+
+            const metadata = [
+                ["DISTRIBUIDORA EL INDIO SRL - RENDICION REPARTO MÓVIL"],
+                ["N° HOJA DE RUTA:", hdrNum, "FECHA:", fecha],
+                ["CHOFER:", chofer, "ZONA:", zona],
+                ["CLIENTES ÚNICOS:", document.getElementById('cantClientes').textContent, "COMPROBANTES:", document.getElementById('cantFacturas').textContent],
+                []
+            ];
+
+            const tableRows = repartoData.map(i => ({
+                "CLIENTE COD": i.codigo,
+                "RAZON SOCIAL": i.nombre,
+                "DIRECCION": i.direccion,
+                "COMPROBANTE": i.comprobante,
+                "IMPORTE": i.importe,
+                "CUENTA CORRIENTE": i.cuentaCorriente ? "SI" : "NO",
+                "ESTADO ENTREGA": i.estado,
+                "FORMA DE PAGO": i.formaPago,
+                "OBSERVACIONES": i.observacion
+            }));
+
+            const ws = XLSX.utils.aoa_to_sheet(metadata);
+            XLSX.utils.sheet_add_json(ws, tableRows, { origin: "A6" });
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rendicion HDR");
+
+            ws['!cols'] = [{ wch: 14 }, { wch: 30 }, { wch: 35 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 30 }];
+
+            XLSX.writeFile(wb, `Rendicion_${hdrNum}_${fecha}.xlsx`);
+        }
+
+        function loadDemoData() {
+            document.getElementById('hdrNumero').value = 'HDR-063';
+            document.getElementById('hdrChofer').value = 'Franco Perez';
+            document.getElementById('hdrZona').value = 'Tartagal Centro';
+
+            repartoData = [
+                { codigo: "0000311587", nombre: "VELAZQUEZ FLORES", direccion: "LEANDRO ALEM AL FINAL 0", comprobante: "FBE 108363", importe: 71288.61, cuentaCorriente: false, estado: "ENTREGADO", formaPago: "EFECTIVO", observacion: "Cobrado efectivo" },
+                { codigo: "0000311137", nombre: "QUISPE GLADIS", direccion: "ESPAÑA Y FRAGATA LIB 0", comprobante: "FBE 108364", importe: 92154.18, cuentaCorriente: true, estado: "ENTREGADO", formaPago: "CUENTA CORRIENTE", observacion: "Remito en C/C" },
+                { codigo: "0000092942", nombre: "OVANDO MILSA", direccion: "CORRIENTES Y AVELLANEDA 0", comprobante: "FBE 108367", importe: 155718.07, cuentaCorriente: false, estado: "PENDIENTE_TRANSF", formaPago: "TRANSFERENCIA", observacion: "Mercadería entregada, transferencia en camino" }
+            ];
+            renderAll();
+        }
+    </script>
+</body>
+</html>
