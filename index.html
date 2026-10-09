@@ -53,8 +53,8 @@
     <!-- HEADER PRINCIPAL -->
     <header class="bg-slate-900 text-white p-3 sm:p-4 rounded-xl mb-3 shadow-sm flex items-center justify-between">
         <div>
-            <h1 class="text-base sm:text-lg font-bold flex items-center gap-2">
-                </i>Reparto Móvil<span id="badgeRol" class="text-[4px] bg-blue-600 px-2 py-0.5 rounded uppercase"></span>
+            <h1 class="text-base sm:text-md font-bold flex items-center gap-2">
+                </i>Reparto Móvil<span id="badgeRol" class="text-[8px] bg-blue-600 px-2 py-0.5 rounded uppercase"></span>
             </h1>
             <small class="text-slate-400 text-xs">Distribuidora El Indio SRL</small>
         </div>
@@ -72,12 +72,15 @@
             <i class="fa-solid fa-binoculars"></i> Monitorear Repartos Activos
         </button>
         
-        <!-- Selector desplegable para Monitoreo en Vivo -->
+       <!-- Buscador directo por número de HDR para Monitoreo -->
         <div id="monitorSelectorBox" class="hidden flex items-center gap-2 ml-auto w-full sm:w-auto mt-2 sm:mt-0">
-            <span class="text-xs font-bold text-gray-600">Seleccionar Ruta:</span>
-            <select id="selectActiveRoute" onchange="loadSelectedMonitorRoute(this.value)" class="p-1.5 border rounded-lg text-xs font-bold bg-gray-50 outline-none">
-                <option value="">-- Seleccione HDR y Chofer --</option>
-            </select>
+            <span class="text-xs font-bold text-gray-600">N° HDR:</span>
+            <input type="text" id="inputMonitorHDR" placeholder="Ej: 16423" 
+                   class="p-1.5 border border-gray-300 rounded-lg text-xs font-bold bg-white outline-none w-28 uppercase">
+            <button onclick="searchMonitorHDR()" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition">
+                <i class="fa-solid fa-magnifying-glass"></i> Consultar
+            </button>
         </div>
     </div>
 
