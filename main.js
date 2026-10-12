@@ -6,8 +6,16 @@ document.addEventListener("DOMContentLoaded", function() {
     const dateField = document.getElementById('hdrFecha');
     if(dateField) dateField.value = new Date().toISOString().slice(0, 10);
 });
-
-
+// fecha y hora 
+function getFormattedDateTime() {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
 // Muestra el cuadro de contraseña cuando el usuario hace clic en Administrador
 function requestAdminAccess() {
     const passwordBox = document.getElementById('adminPasswordBox');
