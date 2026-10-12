@@ -9,35 +9,46 @@
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
-        // ⚠️ PEGA AQUÍ TU URL DE APPS SCRIPT
+        // ⚠️ TU URL DE APPS SCRIPT
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2Mze4ySYves0uLpjlQmIMBuFKyNwzj8Hg0OEpMuWeKJ7glMe35v0B98Bmdsg_4YAk/exec";
     </script>
 </head>
 <body class="bg-gray-100 text-gray-900 font-sans p-2 sm:p-4 pb-12 mx-auto">
 
-    <!-- 👤 PANTALLA 1: SELECCIÓN DE PERFIL -->
-    <div id="roleSelectorScreen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl text-center flex flex-col gap-4">
-            <div class="flex justify-center mb-1">
-                <div class="bg-blue-100 text-blue-600 p-4 rounded-full text-2xl">
-                    <i class="fa-solid fa-truck-fast"></i>
+    <!-- SELECCIÓN DE PERFIL -->
+        <div id="roleSelectorScreen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl text-center flex flex-col gap-4">
+                <div class="flex justify-center mb-1">
+                    <div class="bg-slate-100 text-slate-700 p-4 rounded-full text-2xl">
+                        <i class="fa-solid fa-truck-fast"></i>
+                    </div>
+                </div>
+                <h2 class="text-xl font-bold text-slate-900">Distribuidora El Indio SRL</h2>
+                <p class="text-xs text-gray-500">Seleccione su rol para ingresar al sistema.</p>
+                
+                <!-- Contenedor de Botones Unificados -->
+                <div class="flex flex-col gap-3 mt-3">
+                    <button onclick="requestAdminAccess()" class="bg-slate-800 hover:bg-slate-900 text-white p-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-3 transition shadow-sm">
+                        <i class="fa-solid fa-user-shield text-slate-300 text-lg"></i> Ingresar como Administrador (Oficina)
+                    </button>
+                    <button onclick="selectRole('driver')" class="bg-slate-800 hover:bg-slate-900 text-white p-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-3 transition shadow-sm">
+                        <i class="fa-solid fa-id-card-clip text-slate-300 text-lg"></i> Ingresar como Transportista (Chofer)
+                    </button>
+                </div>
+
+                <!-- Input de Clave Admin Oculto por defecto -->
+                <div id="adminPasswordBox" class="hidden flex flex-col gap-2 mt-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <label class="text-[11px] font-bold text-gray-600 uppercase">Ingrese Clave de Administrador:</label>
+                    <input type="password" id="adminPasswordInput" placeholder="Contraseña..." class="p-2 border rounded-lg text-xs font-bold text-center focus:ring-2 focus:ring-slate-800 focus:outline-none">
+                    <div class="flex gap-2">
+                        <button onclick="document.getElementById('adminPasswordBox').classList.add('hidden')" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-1.5 rounded-lg text-xs font-bold transition">Cancelar</button>
+                        <button onclick="verifyAdminPassword()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white py-1.5 rounded-lg text-xs font-bold transition">Entrar</button>
+                    </div>
                 </div>
             </div>
-            <h2 class="text-xl font-bold text-slate-900">Distribuidora El Indio SRL</h2>
-            <p class="text-xs text-gray-500">Seleccione su rol para ingresar al sistema.</p>
-            
-            <div class="flex flex-col gap-3 mt-3">
-                <button onclick="selectRole('admin')" class="bg-slate-900 hover:bg-slate-800 text-white p-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-3 transition">
-                    <i class="fa-solid fa-user-shield text-blue-400 text-lg"></i> Ingresar como Administrador (Oficina)
-                </button>
-                <button onclick="selectRole('driver')" class="bg-blue-600 hover:bg-blue-700 text-white p-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-3 transition">
-                    <i class="fa-solid fa-id-card-clip text-lg"></i> Ingresar como Transportista (Chofer)
-                </button>
-            </div>
         </div>
-    </div>
 
-    <!-- 🔑 MODAL PARA INGRESAR NÚMERO DE HDR (CHOFER) -->
+    <!-- MODAL INGRESO HDR CHOFER -->
     <div id="driverModal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-xl p-5 max-w-sm w-full shadow-xl flex flex-col gap-3">
             <h3 class="font-bold text-slate-900 text-sm"><i class="fa-solid fa-route text-blue-600 mr-2"></i>Ingrese su Hoja de Ruta</h3>
@@ -50,11 +61,11 @@
         </div>
     </div>
 
-    <!-- HEADER PRINCIPAL -->
+    <!-- HEADER -->
     <header class="bg-slate-900 text-white p-3 sm:p-4 rounded-xl mb-3 shadow-sm flex items-center justify-between">
         <div>
             <h1 class="text-base sm:text-md font-bold flex items-center gap-2">
-                </i>Reparto Móvil<span id="badgeRol" class="text-[8px] bg-blue-600 px-2 py-0.5 rounded uppercase"></span>
+                <span id="badgeRol" class="text-[8px] bg-blue-600 px-2 py-0.5 rounded uppercase"></span>
             </h1>
             <small class="text-slate-400 text-xs">Distribuidora El Indio SRL</small>
         </div>
@@ -63,7 +74,7 @@
         </button>
     </header>
 
-    <!-- 🎛️ MENÚ DE OPCIONES DEL ADMINISTRADOR -->
+    <!-- MENÚ ADMIN -->
     <div id="adminMenu" class="bg-white p-3 rounded-xl border border-gray-200 mb-3 shadow-xs flex flex-wrap gap-2 hidden items-center">
         <button onclick="switchAdminTab('create')" id="btnTabCreate" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition">
             <i class="fa-solid fa-file-circle-plus"></i> Cargar Nueva HDR
@@ -72,14 +83,18 @@
             <i class="fa-solid fa-binoculars"></i> Monitorear Repartos Activos
         </button>
         
-       <!-- Buscador directo por número de HDR para Monitoreo -->
-        <div id="monitorSelectorBox" class="hidden flex items-center gap-2 ml-auto w-full sm:w-auto mt-2 sm:mt-0">
+        <!-- Buscador directo por número de HDR para Monitoreo con Botón de Exportar -->
+        <div id="monitorSelectorBox" class="hidden flex items-center flex-wrap gap-2 ml-auto w-full sm:w-auto mt-2 sm:mt-0">
             <span class="text-xs font-bold text-gray-600">N° HDR:</span>
             <input type="text" id="inputMonitorHDR" placeholder="Ej: 16423" 
-                   class="p-1.5 border border-gray-300 rounded-lg text-xs font-bold bg-white outline-none w-28 uppercase">
+                class="p-1 border border-gray-300 rounded-lg text-xs font-bold bg-white outline-none w-28 uppercase">
             <button onclick="searchMonitorHDR()" 
                     class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition">
                 <i class="fa-solid fa-magnifying-glass"></i> Consultar
+            </button>
+            <button onclick="exportMonitorExcel()" 
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition shadow-xs">
+                <i class="fa-solid fa-file-excel"></i> Exportar
             </button>
         </div>
     </div>
@@ -96,7 +111,7 @@
         </div>
         <div class="flex flex-col gap-1">
             <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Zona</label>
-            <select id="hdrZona" class="p-1.5 border border-gray-300 rounded-lg text-xs font-semibold w-full bg-gray-50 text-gray-700 outline-none focus:ring-1 focus:ring-blue-500">
+            <select id="hdrZona" class="p-1.5 border border-gray-300 rounded-lg text-xs font-semibold w-full bg-gray-50 text-gray-700 outline-none">
                 <option value="" disabled selected>Seleccionar Zona...</option>
                 <option value="TARTAGAL NORTE">TARTAGAL NORTE</option>
                 <option value="TARTAGAL SUR">TARTAGAL SUR</option>
@@ -107,10 +122,9 @@
                 <option value="CORNEJO">CORNEJO</option>
             </select>
         </div>
-        
         <div class="flex flex-col gap-1">
             <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Patente</label>
-            <select id="hdrPatente" class="p-1.5 border border-gray-300 rounded-lg text-xs font-semibold w-full bg-gray-50 text-gray-700 outline-none focus:ring-1 focus:ring-blue-500">
+            <select id="hdrPatente" class="p-1.5 border border-gray-300 rounded-lg text-xs font-semibold w-full bg-gray-50 text-gray-700 outline-none">
                 <option value="" disabled selected>Seleccionar Patente...</option>
                 <option value="AC 911 IM">AC 911 IM</option>
                 <option value="AC 911 II">AC 911 II</option>
@@ -130,26 +144,30 @@
     </div>
 
     <!-- MÉTRICAS -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-3">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5 mb-3">
         <div class="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs">
             <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Carga Total</div>
             <div id="totalCarga" class="text-sm sm:text-base font-bold text-blue-600 mt-0.5">$ 0,00</div>
         </div>
         <div class="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs">
-            <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Cobrado</div>
+            <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Cobrado (Efe/Tr/Ch)</div>
             <div id="totalCobrado" class="text-sm sm:text-base font-bold text-green-600 mt-0.5">$ 0,00</div>
+        </div>
+        <div class="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs">
+            <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Créditos (Cta. Cte.)</div>
+            <div id="totalCreditos" class="text-sm sm:text-base font-bold text-purple-600 mt-0.5">$ 0,00</div>
         </div>
         <div class="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs">
             <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Transf. Pend.</div>
             <div id="totalPendTransf" class="text-sm sm:text-base font-bold text-sky-600 mt-0.5">$ 0,00</div>
         </div>
-        <div class="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs">
+        <div class="bg-white p-2.5 rounded-xl border border-gray-200 shadow-xs col-span-2 md:col-span-1">
             <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Rechazado</div>
             <div id="totalRechazado" class="text-sm sm:text-base font-bold text-red-600 mt-0.5">$ 0,00</div>
         </div>
     </div>
 
-    <!-- CONTROLES DE CARGA (Admin - Pestaña Crear) -->
+    <!-- CONTROLES DE CARGA ADMIN -->
     <div id="adminCreateControls" class="bg-white p-3 rounded-xl border border-gray-200 mb-3 shadow-xs flex flex-col md:flex-row gap-2.5 hidden">
         <div class="flex gap-2 w-full md:w-auto">
             <label class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer flex items-center justify-center gap-2 transition">
@@ -160,18 +178,13 @@
                 <i class="fa-solid fa-cloud-arrow-up"></i> 2. Registrar HDR en Nube
             </button>
         </div>
-        <div class="relative flex-1">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            <input type="text" id="searchInput" onkeyup="filterData()" placeholder="Buscar cliente, calle, factura..." 
-                   class="w-full bg-gray-50 border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600">
-        </div>
     </div>
 
-    <!-- Buscador genérico -->
-    <div id="generalSearchContainer" class="bg-white p-3 rounded-xl border border-gray-200 mb-3 shadow-xs hidden">
+    <!-- BUSCADOR -->
+    <div id="generalSearchContainer" class="bg-white p-3 rounded-xl border border-gray-200 mb-3 shadow-xs">
         <div class="relative w-full">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            <input type="text" id="searchDriverInput" onkeyup="filterData()" placeholder="🔍 Buscar cliente, calle, factura..." 
+            <input type="text" id="searchDriverInput" onkeyup="filterData()" placeholder="Buscar cliente, calle, factura..." 
                    class="w-full bg-gray-50 border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600">
         </div>
     </div>
@@ -187,9 +200,9 @@
                     <th class="p-2.5">Código</th>
                     <th class="p-2.5">Razón Social</th>
                     <th class="p-2.5">Dirección</th>
+                    <th class="p-2.5">Ven</th>
                     <th class="p-2.5">Comprobante</th>
                     <th class="p-2.5">Importe</th>
-                    <th class="p-2.5 text-center">C/C</th>
                     <th class="p-2.5">Estado Entrega</th>
                     <th class="p-2.5">Forma de Pago</th>
                     <th class="p-2.5">Observación</th>
@@ -199,406 +212,7 @@
         </table>
     </div>
 
-    <script>
-        let currentRole = '';
-        let repartoData = [];
-        let adminTab = 'create'; // 'create' o 'monitor'
-
-        document.addEventListener("DOMContentLoaded", function() {
-            document.getElementById('hdrFecha').value = new Date().toISOString().slice(0, 10);
-        });
-
-        function selectRole(role) {
-            currentRole = role;
-            document.getElementById('roleSelectorScreen').classList.add('hidden');
-            document.getElementById('badgeRol').textContent = role === 'admin' ? 'Administración' : 'Chofer';
-
-            if (role === 'admin') {
-                document.getElementById('adminMenu').classList.remove('hidden');
-                switchAdminTab('create');
-            } else {
-                document.getElementById('generalSearchContainer').classList.remove('hidden');
-                document.getElementById('driverModal').classList.remove('hidden');
-            }
-        }
-
-        async function switchAdminTab(tab) {
-            adminTab = tab;
-            const btnCreate = document.getElementById('btnTabCreate');
-            const btnMonitor = document.getElementById('btnTabMonitor');
-            const createControls = document.getElementById('adminCreateControls');
-            const monitorBox = document.getElementById('monitorSelectorBox');
-            const searchContainer = document.getElementById('generalSearchContainer');
-
-            // Habilitar edición de cabecera solo si está en modo Cargar
-            const makeEditable = (tab === 'create');
-            ['hdrNumero', 'hdrChofer', 'hdrZona'].forEach(id => {
-                const el = document.getElementById(id);
-                if (makeEditable) {
-                    el.removeAttribute('readonly');
-                    el.classList.remove('bg-gray-50');
-                    el.classList.add('bg-white');
-                } else {
-                    el.setAttribute('readonly', true);
-                    el.classList.add('bg-gray-50');
-                    el.classList.remove('bg-white');
-                }
-            });
-
-            if (tab === 'create') {
-                btnCreate.className = "bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition";
-                btnMonitor.className = "bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition";
-                createControls.classList.remove('hidden');
-                monitorBox.classList.add('hidden');
-                searchContainer.classList.add('hidden');
-                repartoData = [];
-                renderAll();
-            } else {
-                btnMonitor.className = "bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition";
-                btnCreate.className = "bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition";
-                createControls.classList.add('hidden');
-                monitorBox.classList.remove('hidden');
-                searchContainer.classList.remove('hidden');
-                await loadActiveRoutesDropdown();
-            }
-        }
-
-        async function loadActiveRoutesDropdown() {
-            try {
-                const res = await fetch(`${SCRIPT_URL}?action=getRoutesList`);
-                const json = await res.json();
-                if(json.status === 'success') {
-                    const select = document.getElementById('selectActiveRoute');
-                    select.innerHTML = '<option value="">-- Seleccione HDR y Chofer --</option>';
-                    json.routes.forEach(r => {
-                        select.innerHTML += `<option value="${r.hdr}">HDR: ${r.hdr} — Chofer: ${r.chofer}</option>`;
-                    });
-                }
-            } catch(e) {
-                console.error("Error al cargar rutas activas", e);
-            }
-        }
-
-        async function loadSelectedMonitorRoute(hdr) {
-            if(!hdr) return;
-            try {
-                const res = await fetch(`${SCRIPT_URL}?action=getHDR&hdr=${hdr}`);
-                const json = await res.json();
-                if(json.status === 'success') {
-                    repartoData = json.data;
-                    if(repartoData.length > 0) {
-                        document.getElementById('hdrNumero').value = repartoData[0].HDR || '';
-                        document.getElementById('hdrChofer').value = repartoData[0].CHOFER || '';
-                        document.getElementById('hdrZona').value = repartoData[0].ZONA || '';
-                    }
-                    renderAll();
-                }
-            } catch(e) {
-                alert("Error al monitorear ruta: " + e);
-            }
-        }
-
-        function loadDriverHDR() {
-            const hdr = document.getElementById('inputHdrLogin').value.trim();
-            if (!hdr) return alert("Ingrese un número de HDR válido.");
-            document.getElementById('driverModal').classList.add('hidden');
-            document.getElementById('hdrNumero').value = hdr;
-            loadHDRDataCloud(hdr);
-        }
-
-        async function loadHDRDataCloud(hdr) {
-            try {
-                const res = await fetch(`${SCRIPT_URL}?action=getHDR&hdr=${hdr}`);
-                const json = await res.json();
-                if(json.status === 'success') {
-                    repartoData = json.data;
-                    if(repartoData.length > 0) {
-                        document.getElementById('hdrChofer').value = repartoData[0].CHOFER || '';
-                        document.getElementById('hdrZona').value = repartoData[0].ZONA || '';
-                    } else {
-                        alert("No se encontraron registros para la HDR " + hdr);
-                    }
-                    renderAll();
-                }
-            } catch(e) {
-                alert("Error al cargar la ruta: " + e);
-            }
-        }
-
-        async function updateCloudRow(index) {
-            const item = repartoData[index];
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'updateRow',
-                        rowIndex: item.rowIndex,
-                        estado: item.ESTADO,
-                        formaPago: item.FORMA_PAGO,
-                        observacion: item.OBSERVACIONES
-                    })
-                });
-            } catch(e) {
-                console.error("Error al sincronizar en tiempo real", e);
-            }
-        }
-
-        function cleanNumber(val) {
-            if (typeof val === 'number') return val;
-            if (!val) return 0;
-            let str = String(val).replace(/\$/g, '').trim();
-            if (str.includes('.') && str.includes(',')) str = str.replace(/\./g, '').replace(',', '.');
-            else if (str.includes(',')) str = str.replace(',', '.');
-            return parseFloat(str) || 0;
-        }
-
-        function formatMoney(num) {
-            return '$ ' + num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-        
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const data = new Uint8Array(evt.target.result);
-                const wb = XLSX.read(data, { type: 'array' });
-                const ws = wb.Sheets[wb.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
-        
-                const hdrInput = document.getElementById('hdrNumero').value.trim() || 'S/N';
-                const choferInput = document.getElementById('hdrChofer').value.trim() || 'S/D';
-                const zonaInput = document.getElementById('hdrZona').value.trim() || 'S/D';
-                const patenteInput = document.getElementById('hdrPatente').value.trim() || 'S/D';
-        
-                repartoData = json.map(r => {
-                    // 1. Extraer y formatear el código de cliente a 10 dígitos exactos con ceros a la izquierda
-                    let rawCliente = String(r.CLIENTE || r.COD || r.ID || '').trim();
-                    // Eliminar espacios y formatear a 10 dígitos (Ej: "311587" -> "0000311587")
-                    let clienteFormatted = rawCliente ? rawCliente.padStart(10, '0') : '0000000000';
-        
-                    // 2. Evaluar Condición de Venta para C/C
-                    let condVenta = String(r.COND || r['CONDICION'] || '').toLowerCase();
-                    let esCC = condVenta.includes('cta') || condVenta.includes('corriente') || condVenta.includes('cc');
-        
-                    // 3. Formatear importe numérico correctamente desde string/número
-                    let imp = cleanNumber(r.IMPORTE || r.IMPORTA || r.MONTO || 0);
-        
-                    return {
-                        HDR: hdrInput,
-                        CHOFER: choferInput,
-                        ZONA: zonaInput,
-                        PATENTE: patenteInput,
-                        CLIENTE: clienteFormatted,
-                        RAZON_SOCIAL: String(r.RS || r['RAZON SOCIAL'] || r.NOMBRE || '').trim(),
-                        DIRECCION: String(r.DIRECCION || '').trim(),
-                        COMPROBANTE: String(r.COMPROBANTE || '').trim(),
-                        IMPORTE: imp,
-                        CUENTA_CORRIENTE: esCC,
-                        ESTADO: 'PENDIENTE',
-                        FORMA_PAGO: esCC ? 'CUENTA CORRIENTE' : 'EFECTIVO',
-                        OBSERVACIONES: ''
-                    };
-                });
-        
-                renderAll();
-                alert("Excel cargado correctamente con clientes a 10 dígitos. Presione 'Registrar HDR en Nube'.");
-            };
-            reader.readAsArrayBuffer(file);
-        });
-
-        async function registerHDRCloud() {
-            if (repartoData.length === 0) return alert("No hay datos cargados para registrar.");
-            
-            const hdrVal = document.getElementById('hdrNumero').value.trim();
-            const choferVal = document.getElementById('hdrChofer').value.trim();
-            const zonaVal = document.getElementById('hdrZona').value.trim();
-
-            if (!hdrVal) return alert("Por favor, ingrese el número de HDR antes de registrar.");
-
-            repartoData.forEach(i => {
-                i.HDR = hdrVal;
-                i.CHOFER = choferVal;
-                i.ZONA = zonaVal;
-            });
-
-            try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'saveAll', rows: repartoData })
-                });
-                const json = await res.json();
-                if(json.status === 'success') {
-                    alert("¡Hoja de Ruta " + hdrVal + " registrada en Google Sheets con éxito!");
-                    switchAdminTab('monitor');
-                } else {
-                    alert("Error al registrar: " + json.message);
-                }
-            } catch(e) {
-                alert("Error de conexión al registrar: " + e);
-            }
-        }
-
-        function renderAll(filteredData = null) {
-            const list = filteredData || repartoData;
-            renderMobileCards(list);
-            renderDesktopTable(list);
-            calculateTotals();
-        }
-
-        function getStatusBorderClass(estado) {
-            if (estado === 'ENTREGADO') return 'border-l-4 border-l-green-600';
-            if (estado === 'PENDIENTE_TRANSF') return 'border-l-4 border-l-sky-500';
-            if (estado === 'RECHAZADO') return 'border-l-4 border-l-red-600';
-            return 'border-l-4 border-l-amber-500';
-        }
-
-        function getStatusSelectClass(estado) {
-            if (estado === 'ENTREGADO') return 'bg-green-50 text-green-700 border-green-300';
-            if (estado === 'PENDIENTE_TRANSF') return 'bg-sky-50 text-sky-700 border-sky-300';
-            if (estado === 'RECHAZADO') return 'bg-red-50 text-red-700 border-red-300';
-            return 'bg-amber-50 text-amber-700 border-amber-300';
-        }
-
-        function renderMobileCards(list) {
-            const container = document.getElementById('cardsContainer');
-            container.innerHTML = '';
-
-            if (list.length === 0) {
-                container.innerHTML = '<div class="text-center py-8 bg-white rounded-xl border text-gray-400 text-xs">No hay registros para mostrar.</div>';
-                return;
-            }
-
-            list.forEach((item, index) => {
-                const card = document.createElement('div');
-                card.className = `bg-white p-3 rounded-xl border border-gray-200 shadow-xs flex flex-col gap-2 ${getStatusBorderClass(item.ESTADO)}`;
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[10px] font-bold font-mono">ID: ${item.COD || item.CLIENTE}</span>
-                        <span class="text-sm font-extrabold text-slate-900">${formatMoney(item.IMPORTE)}</span>
-                    </div>
-                    <div>
-                        <div class="text-xs font-bold text-slate-900">${item.RAZON_SOCIAL}</div>
-                        <div class="text-[11px] text-gray-500"><i class="fa-solid fa-location-dot text-gray-400 mr-1"></i>${item.DIRECCION}</div>
-                    </div>
-                    <div class="flex items-center gap-2 pt-1 border-t border-gray-100">
-                        <span class="bg-gray-50 border px-2 py-0.5 rounded text-[10px] font-semibold text-gray-600"><i class="fa-solid fa-file-lines mr-1"></i>${item.COMPROBANTE}</span>
-                        <span class="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded">C/C: ${item.CUENTA_CORRIENTE ? 'SI' : 'NO'}</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 pt-1">
-                        <select class="w-full p-1.5 rounded-lg border text-xs font-bold outline-none cursor-pointer ${getStatusSelectClass(item.ESTADO)}" onchange="updateStatus(${index}, this.value)">
-                            <option value="PENDIENTE" ${item.ESTADO === 'PENDIENTE' ? 'selected' : ''}>🟡 PENDIENTE</option>
-                            <option value="ENTREGADO" ${item.ESTADO === 'ENTREGADO' ? 'selected' : ''}>🟢 COBRADO</option>
-                            <option value="PENDIENTE_TRANSF" ${item.ESTADO === 'PENDIENTE_TRANSF' ? 'selected' : ''}>🔵 TRANSF. PEND.</option>
-                            <option value="RECHAZADO" ${item.ESTADO === 'RECHAZADO' ? 'selected' : ''}>🔴 RECHAZADO</option>
-                        </select>
-                        <select class="w-full p-1.5 rounded-lg border border-gray-300 text-xs font-bold outline-none bg-white cursor-pointer" onchange="updatePayment(${index}, this.value)">
-                            <option value="EFECTIVO" ${item.FORMA_PAGO === 'EFECTIVO' ? 'selected' : ''}>💵 EFECTIVO</option>
-                            <option value="TRANSFERENCIA" ${item.FORMA_PAGO === 'TRANSFERENCIA' ? 'selected' : ''}>📲 TRANSF.</option>
-                            <option value="CHEQUE" ${item.FORMA_PAGO === 'CHEQUE' ? 'selected' : ''}>📜 CHEQUE</option>
-                            <option value="CUENTA CORRIENTE" ${item.FORMA_PAGO === 'CUENTA CORRIENTE' ? 'selected' : ''}>📋 CTA CTE</option>
-                        </select>
-                    </div>
-                    <div>
-                        <input type="text" class="w-full bg-gray-50 border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none" value="${item.OBSERVACIONES || ''}" 
-                               onchange="updateObs(${index}, this.value)" placeholder="✍️ Añadir nota / novedad...">
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function renderDesktopTable(list) {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-
-            list.forEach((item, index) => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 transition";
-                tr.innerHTML = `
-                    <td class="p-2.5 font-bold font-mono text-gray-700">${item.COD || item.CLIENTE}</td>
-                    <td class="p-2.5 font-medium text-gray-900">${item.RAZON_SOCIAL}</td>
-                    <td class="p-2.5 text-gray-600">${item.DIRECCION}</td>
-                    <td class="p-2.5 text-gray-600">${item.COMPROBANTE}</td>
-                    <td class="p-2.5 font-bold text-slate-900">${formatMoney(item.IMPORTE)}</td>
-                    <td class="p-2.5 text-center font-bold">${item.CUENTA_CORRIENTE ? 'SI' : 'NO'}</td>
-                    <td class="p-2.5">
-                        <select class="p-1 rounded border text-xs font-bold outline-none cursor-pointer ${getStatusSelectClass(item.ESTADO)}" onchange="updateStatus(${index}, this.value)">
-                            <option value="PENDIENTE" ${item.ESTADO === 'PENDIENTE' ? 'selected' : ''}>🟡 PENDIENTE</option>
-                            <option value="ENTREGADO" ${item.ESTADO === 'ENTREGADO' ? 'selected' : ''}>🟢 COBRADO</option>
-                            <option value="PENDIENTE_TRANSF" ${item.ESTADO === 'PENDIENTE_TRANSF' ? 'selected' : ''}>🔵 TRANSF. PEND.</option>
-                            <option value="RECHAZADO" ${item.ESTADO === 'RECHAZADO' ? 'selected' : ''}>🔴 RECHAZADO</option>
-                        </select>
-                    </td>
-                    <td class="p-2.5">
-                        <select class="p-1 rounded border border-gray-300 text-xs font-bold outline-none bg-white cursor-pointer" onchange="updatePayment(${index}, this.value)">
-                            <option value="EFECTIVO" ${item.FORMA_PAGO === 'EFECTIVO' ? 'selected' : ''}>EFECTIVO</option>
-                            <option value="TRANSFERENCIA" ${item.FORMA_PAGO === 'TRANSFERENCIA' ? 'selected' : ''}>TRANSFERENCIA</option>
-                            <option value="CHEQUE" ${item.FORMA_PAGO === 'CHEQUE' ? 'selected' : ''}>CHEQUE</option>
-                            <option value="CUENTA CORRIENTE" ${item.FORMA_PAGO === 'CUENTA CORRIENTE' ? 'selected' : ''}>CUENTA CORRIENTE</option>
-                        </select>
-                    </td>
-                    <td class="p-2.5">
-                        <input type="text" class="w-full bg-gray-50 border rounded px-2 py-1 text-xs focus:outline-none" value="${item.OBSERVACIONES || ''}" 
-                               onchange="updateObs(${index}, this.value)" placeholder="Añadir nota...">
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        async function updateStatus(idx, val) {
-            repartoData[idx].ESTADO = val;
-            if (val === 'PENDIENTE_TRANSF') repartoData[idx].FORMA_PAGO = 'TRANSFERENCIA';
-            renderAll();
-            await updateCloudRow(idx);
-        }
-
-        async function updatePayment(idx, val) {
-            repartoData[idx].FORMA_PAGO = val;
-            await updateCloudRow(idx);
-        }
-
-        async function updateObs(idx, val) {
-            repartoData[idx].OBSERVACIONES = val;
-            await updateCloudRow(idx);
-        }
-
-        function calculateTotals() {
-            let total = 0, cobrado = 0, pendTransf = 0, rechazado = 0;
-            const clientesUnicos = new Set();
-
-            repartoData.forEach(item => {
-                const imp = cleanNumber(item.IMPORTE);
-                total += imp;
-                if (item.COD || item.CLIENTE) clientesUnicos.add(item.COD || item.CLIENTE);
-
-                if (item.ESTADO === 'ENTREGADO') cobrado += imp;
-                else if (item.ESTADO === 'PENDIENTE_TRANSF') pendTransf += imp;
-                else if (item.ESTADO === 'RECHAZADO') rechazado += imp;
-            });
-
-            document.getElementById('totalCarga').textContent = formatMoney(total);
-            document.getElementById('totalCobrado').textContent = formatMoney(cobrado);
-            document.getElementById('totalPendTransf').textContent = formatMoney(pendTransf);
-            document.getElementById('totalRechazado').textContent = formatMoney(rechazado);
-
-            document.getElementById('cantClientes').textContent = `${clientesUnicos.size} Únicos`;
-            document.getElementById('cantFacturas').textContent = `${repartoData.length} Facturas`;
-        }
-
-        function filterData() {
-            const q = document.getElementById('searchDriverInput').value.toLowerCase();
-            const filtered = repartoData.filter(i => 
-                String(i.COD || i.CLIENTE).toLowerCase().includes(q) ||
-                String(i.RAZON_SOCIAL).toLowerCase().includes(q) ||
-                String(i.DIRECCION).toLowerCase().includes(q) ||
-                String(i.COMPROBANTE).toLowerCase().includes(q)
-            );
-            renderAll(filtered);
-        }
-    </script>
+    <!-- Enlace al archivo principal JavaScript -->
+    <script src="main.js"></script>
 </body>
 </html>
