@@ -326,25 +326,38 @@ async function registerHDRCloud() {
 
     if (!hdrVal) return alert("Por favor, ingrese el número de HDR antes de registrar.");
 
-    repartoData.forEach(i => {
-        i.HDR = hdrVal;
-        i.CHOFER = choferVal;
-        i.ZONA = zonaVal;
-        i.PATENTE = patenteVal;
-    });
-
     try {
+        // 1. Verificamos primero si la HDR ya existe en la base de datos
+        const checkRes = await fetch(`${SCRIPT_URL}?action=getHDR&hdr=${hdrVal}`);
+        const checkJson = await checkRes.json();
+
+        if (checkJson.status === 'success' && checkJson.data && checkJson.data.length > 0) {
+            // Si ya tiene registros, alertamos al usuario
+            const confirmar = confirm(`⚠️ ¡Atención! La Hoja de Ruta N° ${hdrVal} ya se encuentra registrada en el sistema.\n\n¿Desea agregar estos registros de todas formas?`);
+            if (!confirmar) return; // Si cancela, se frena el proceso
+        }
+
+        // 2. Si no existe o el usuario confirmó duplicar, procedemos a guardar
+        repartoData.forEach(i => {
+            i.HDR = hdrVal;
+            i.CHOFER = choferVal;
+            i.ZONA = zonaVal;
+            i.PATENTE = patenteVal;
+        });
+
         const res = await fetch(SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'saveAll', rows: repartoData })
         });
         const json = await res.json();
+        
         if(json.status === 'success') {
             alert("¡Hoja de Ruta " + hdrVal + " registrada en Google Sheets con éxito!");
             switchAdminTab('monitor');
         } else {
             alert("Error al registrar: " + json.message);
         }
+
     } catch(e) {
         alert("Error de conexión al registrar: " + e);
     }
