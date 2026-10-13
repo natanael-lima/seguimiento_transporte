@@ -16,6 +16,7 @@ function getFormattedDateTime() {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
+document.getElementById('hdrTimestamp').value = getFormattedDateTime();
 // Muestra el cuadro de contraseña cuando el usuario hace clic en Administrador
 function requestAdminAccess() {
     const passwordBox = document.getElementById('adminPasswordBox');
@@ -25,7 +26,7 @@ function requestAdminAccess() {
     }
 }
 
-// Valida la clave por defecto "admin"
+// Valida la clave
 function verifyAdminPassword() {
     const pass = document.getElementById('adminPasswordInput').value.trim();
     if (pass === "admin") {
