@@ -7,7 +7,7 @@ let repartoData = [];        // Array principal con todas las filas de la HDR ac
 let adminTab = 'create';     // 'create' | 'monitor'
 let cobroIndex = -1;         // Índice de la fila que se está editando en el modal de cobro
 
-const SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL;
+
 
 /* ============================================================================
    2. UTILIDADES GENERALES
@@ -48,6 +48,40 @@ function formatMoney(num) {
     return '$ ' + num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+
+let SCRIPT_URL = "";
+
+// Función que se ejecuta al cargar la página para obtener la URL privada del servidor
+async function initAppConfig() {
+    try {
+        const response = await fetch('/api/config');
+        const data = await response.json();
+        if (data.scriptUrl) {
+            SCRIPT_URL = data.scriptUrl;
+            console.log("Configuración cargada correctamente.");
+        } else {
+            console.error("No se encontró la URL de Apps Script en el servidor.");
+        }
+    } catch (error) {
+        console.error("Error al obtener la configuración:", error);
+    }
+}
+
+// Único inicializador cuando el DOM carga por completo
+document.addEventListener("DOMContentLoaded", async function() {
+    // 1. Carga la URL privada de Apps Script desde Vercel
+    await initAppConfig();
+
+    // 2. Inicializa la fecha por defecto en el campo #hdrFecha
+    const dateField = document.getElementById('hdrFecha');
+    if (dateField) dateField.value = new Date().toISOString().slice(0, 10);
+
+    // 3. Setea el timestamp inicial en el panel superior si el elemento existe
+    const timestampElem = document.getElementById('hdrTimestamp');
+    if (timestampElem) {
+        timestampElem.value = getFormattedDateTime();
+    }
+});
 
 /* ============================================================================
    3. AUTENTICACIÓN Y SELECCIÓN DE ROL
