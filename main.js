@@ -7,6 +7,7 @@ let repartoData = [];        // Array principal con todas las filas de la HDR ac
 let adminTab = 'create';     // 'create' | 'monitor'
 let cobroIndex = -1;         // Índice de la fila que se está editando en el modal de cobro
 
+const SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL;
 
 /* ============================================================================
    2. UTILIDADES GENERALES
