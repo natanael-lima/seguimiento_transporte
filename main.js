@@ -51,7 +51,6 @@ function formatMoney(num) {
 /* ============================================================================
    3. AUTENTICACIÓN Y SELECCIÓN DE ROL
    ============================================================================ */
-
 // Muestra/oculta el cuadro de contraseña al hacer click en "Administrador"
 function requestAdminAccess() {
     const passwordBox = document.getElementById('adminPasswordBox');
@@ -61,17 +60,36 @@ function requestAdminAccess() {
     }
 }
 
-// Valida la clave de admin y entra al sistema
-function verifyAdminPassword() {
+// Valida la clave de admin de forma segura contra el backend de Vercel
+async function verifyAdminPassword() {
     const pass = document.getElementById('adminPasswordInput').value.trim();
-    if (pass === "admin") {
-        selectRole('admin');
-    } else {
-        alert("Contraseña incorrecta.");
-        document.getElementById('adminPasswordInput').value = '';
+    if (!pass) {
+        alert("Por favor, ingrese una contraseña.");
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pass })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Contraseña correcta: entra al sistema como admin
+            selectRole('admin');
+        } else {
+            // Contraseña incorrecta
+            alert("Contraseña incorrecta.");
+            document.getElementById('adminPasswordInput').value = '';
+        }
+    } catch (error) {
+        console.error("Error de autenticación", error);
+        alert("Ocurrió un error al verificar la contraseña.");
     }
 }
-
 // Selecciona el rol (admin o driver) y muestra la UI correspondiente
 function selectRole(role) {
     currentRole = role;
